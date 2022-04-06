@@ -5,12 +5,9 @@ set -u
 
 # Config
 MATRIX_NAME=matrix.bot
-SYNAPSE_VOLUME=./data/synapse-data
-ADMIN_TOKEN_FILE=./data/admin_token
-ROOM_ID_FILE=./data/room_id
+SYNAPSE_VOLUME=./synapse-data
 
 # Clean
-rm -f $ADMIN_TOKEN_FILE $ROOM_ID_FILE
 podman unshare rm -rf $SYNAPSE_VOLUME
 mkdir -p $SYNAPSE_VOLUME
 podman rm -f synapse || true
@@ -38,15 +35,15 @@ done
 podman exec -it synapse register_new_matrix_user http://localhost:8008 -c /data/homeserver.yaml -u bot -p bot --no-admin
 
 # Retrieve admin token to create a new room
-curl -s -XPOST -d '{"type":"m.login.password", "user":"admin", "password":"admin"}' "http://localhost:8008/_matrix/client/v3/login" |
-    jq -r '.access_token' >$ADMIN_TOKEN_FILE
+ADMIN_TOKEN=$(curl -s -XPOST -d '{"type":"m.login.password", "user":"admin", "password":"admin"}' "http://localhost:8008/_matrix/client/v3/login" |
+    jq -r '.access_token')
 
 # Create a new room
-curl -s -H "Authorization: Bearer $(cat $ADMIN_TOKEN_FILE)" -XPOST -d '{"name": "Bot Room", "preset": "private_chat", "room_alias_name": "botroom", "room_version": "9", "invite": ["@bot:'$MATRIX_NAME'"]}' "http://localhost:8008/_matrix/client/v3/createRoom" |
-    jq -r '.room_id' >$ROOM_ID_FILE
+ROOM_ID=$(curl -s -H "Authorization: Bearer $ADMIN_TOKEN" -XPOST -d '{"name": "Bot Room", "preset": "private_chat", "room_alias_name": "botroom", "room_version": "9", "invite": ["@bot:'$MATRIX_NAME'"]}' "http://localhost:8008/_matrix/client/v3/createRoom" |
+    jq -r '.room_id')
 
 # Enable encryption in room
-curl -s -H "Authorization: Bearer $(cat $ADMIN_TOKEN_FILE)" -XPUT -d '{"algorithm": "m.megolm.v1.aes-sha2"}' "http://localhost:8008/_matrix/client/v3/rooms/$(cat $ROOM_ID_FILE)/state/m.room.encryption/" >/dev/null
+curl -s -H "Authorization: Bearer $ADMIN_TOKEN" -XPUT -d '{"algorithm": "m.megolm.v1.aes-sha2"}' "http://localhost:8008/_matrix/client/v3/rooms/$ROOM_ID/state/m.room.encryption/" >/dev/null
 
 # Spawn Element-Web instance
 podman run -d --name element-web -p 127.0.0.1:8080:80 docker.io/vectorim/element-web
