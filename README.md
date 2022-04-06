@@ -1,6 +1,6 @@
 # Matrix autosetup
 
-Just a tiny script to quickly setup a Matrix server, for bot development purpose.
+Just a tiny script to quickly setup a Matrix.org server, for bot development purpose.
 
 ## Requirements
 
@@ -16,9 +16,9 @@ bash matrix-autosetup.sh
 
 It will :
 
-- create the matrix server and element-web interface
+- spawn the matrix server and element-web interface
 - register two users (`admin:admin` and `bot:bot`)
-- create a room (`#botroom`) with these two users
+- create a private room (`#botroom`) with these two users
 - activate e2e encryption in this room
 
 You can then login on [http://localhost:8080/#/login](http://localhost:8080/#/login)

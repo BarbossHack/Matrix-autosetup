@@ -20,7 +20,7 @@ podman rm -f element-web || true
 podman run -it --rm \
     -v $SYNAPSE_VOLUME:/data:Z \
     -e SYNAPSE_SERVER_NAME=$MATRIX_NAME \
-    -e SYNAPSE_REPORT_STATS=yes \
+    -e SYNAPSE_REPORT_STATS=no \
     docker.io/matrixdotorg/synapse:latest generate
 
 # Spawn the Matrix server
