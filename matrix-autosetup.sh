@@ -49,7 +49,7 @@ curl -s -H "Authorization: Bearer $(cat $ADMIN_TOKEN_FILE)" -XPOST -d '{"name": 
 curl -s -H "Authorization: Bearer $(cat $ADMIN_TOKEN_FILE)" -XPUT -d '{"algorithm": "m.megolm.v1.aes-sha2"}' "http://localhost:8008/_matrix/client/v3/rooms/$(cat $ROOM_ID_FILE)/state/m.room.encryption/" >/dev/null
 
 # Spawn Element-Web instance
-podman run -d --name element-web -p 127.0.0.1:8080:80 docker.io/vectorim/element-web # -v ./volumes/element-web.json:/app/config.json:Z 
+podman run -d --name element-web -p 127.0.0.1:8080:80 docker.io/vectorim/element-web
 podman exec -it element-web sed -i 's|"base_url": "https://matrix-client.matrix.org",|"base_url": "http://localhost:8008",|g' /app/config.json
 podman exec -it element-web sed -i 's|"server_name": "matrix.org"|"server_name": "matrix.world"|g' /app/config.json
 podman exec -it element-web sed -i 's|"base_url": "https://vector.im"||g' /app/config.json
