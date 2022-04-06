@@ -1,6 +1,6 @@
 # Matrix autosetup
 
-Just a tiny script to quickly setup a Matrix.org server, for bot development purpose.
+Just a tiny script to quickly setup a [Matrix.org](https://matrix.org/) server, for bot development purpose.
 
 ## Requirements
 
@@ -21,7 +21,7 @@ It will :
 - create a private room (`#botroom`) with these two users
 - activate e2e encryption in this room
 
-You can then login on [http://localhost:8080/#/login](http://localhost:8080/#/login)
+You will then be able to login on [http://localhost:8080/#/login](http://localhost:8080/#/login)
 
 ## Doc
 
