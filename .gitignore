@@ -1,0 +1,3 @@
+volumes/synapse-data/
+volumes/admin_token
+volumes/room_id
