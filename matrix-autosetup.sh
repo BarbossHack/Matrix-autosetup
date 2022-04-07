@@ -19,6 +19,7 @@ podman run -it --rm \
     -e SYNAPSE_SERVER_NAME=$MATRIX_NAME \
     -e SYNAPSE_REPORT_STATS=no \
     docker.io/matrixdotorg/synapse:latest generate
+podman unshare sed -i "/- port: 8008/a \ \ \ \ bind_addresses: ['0.0.0.0']" $SYNAPSE_VOLUME/homeserver.yaml
 
 # Spawn the Matrix server
 podman run -d --name synapse \
@@ -37,16 +38,24 @@ podman exec -it synapse register_new_matrix_user http://localhost:8008 -c /data/
 # Retrieve admin token to create a new room
 ADMIN_TOKEN=$(curl -s -XPOST -d '{"type":"m.login.password", "user":"admin", "password":"admin"}' "http://localhost:8008/_matrix/client/v3/login" |
     jq -r '.access_token')
+if [ -z $ADMIN_TOKEN ]; then
+    echo -e "\e[41mFailed to get admin access_token\e[0m"
+    exit 1
+fi
 
 # Create a new room
 ROOM_ID=$(curl -s -H "Authorization: Bearer $ADMIN_TOKEN" -XPOST -d '{"name": "Bot Room", "preset": "private_chat", "room_alias_name": "botroom", "room_version": "9", "invite": ["@bot:'$MATRIX_NAME'"]}' "http://localhost:8008/_matrix/client/v3/createRoom" |
     jq -r '.room_id')
+if [ -z $ROOM_ID ]; then
+    echo -e "\e[41mFailed to create room\e[0m"
+    exit 1
+fi
 
 # Enable encryption in room
 curl -s -H "Authorization: Bearer $ADMIN_TOKEN" -XPUT -d '{"algorithm": "m.megolm.v1.aes-sha2"}' "http://localhost:8008/_matrix/client/v3/rooms/$ROOM_ID/state/m.room.encryption/" >/dev/null
 
 # Spawn Element-Web instance
-podman run -d --name element-web -p 127.0.0.1:8080:80 docker.io/vectorim/element-web
+podman run -d --name element-web -p 127.0.0.1:8080:80 --entrypoint sh docker.io/vectorim/element-web -c "sed -i 's/listen  \[::\]:80;//g' /etc/nginx/conf.d/default.conf && /docker-entrypoint.sh && nginx -g 'daemon off;'"
 podman exec -it element-web sed -i 's|"base_url": "https://matrix-client.matrix.org",|"base_url": "http://localhost:8008",|g' /app/config.json
 podman exec -it element-web sed -i 's|"server_name": "matrix.org"|"server_name": "'$MATRIX_NAME'"|g' /app/config.json
 podman exec -it element-web sed -i 's|"base_url": "https://vector.im"||g' /app/config.json
