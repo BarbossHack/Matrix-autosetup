@@ -51,6 +51,15 @@ if [ -z $ROOM_ID ]; then
     exit 1
 fi
 
+# Let bot user join the room
+BOT_TOKEN=$(curl -s -XPOST -d '{"type":"m.login.password", "user":"bot", "password":"bot"}' "http://localhost:8008/_matrix/client/v3/login" |
+    jq -r '.access_token')
+if [ -z $BOT_TOKEN ]; then
+    echo -e "\e[41mFailed to get bot access_token\e[0m"
+    exit 1
+fi
+curl -s -H "Authorization: Bearer $BOT_TOKEN" -XPUT -d '{"reason": "Im a bot"}' "http://localhost:8008/_matrix/client/v3/rooms/$ROOM_ID/join/" >/dev/null
+
 # Enable encryption in room
 curl -s -H "Authorization: Bearer $ADMIN_TOKEN" -XPUT -d '{"algorithm": "m.megolm.v1.aes-sha2"}' "http://localhost:8008/_matrix/client/v3/rooms/$ROOM_ID/state/m.room.encryption/" >/dev/null
 
