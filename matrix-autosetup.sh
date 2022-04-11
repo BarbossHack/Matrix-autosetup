@@ -13,6 +13,10 @@ mkdir -p $SYNAPSE_VOLUME
 podman rm -f synapse || true
 podman rm -f element-web || true
 
+# Pull images
+podman pull docker.io/matrixdotorg/synapse:latest
+podman pull docker.io/vectorim/element-web:latest
+
 # Generate Matrix conf
 podman run -it --rm \
     -v $SYNAPSE_VOLUME:/data:Z \
@@ -64,7 +68,7 @@ curl -s -H "Authorization: Bearer $BOT_TOKEN" -XPUT -d '{"reason": "Im a bot"}' 
 curl -s -H "Authorization: Bearer $ADMIN_TOKEN" -XPUT -d '{"algorithm": "m.megolm.v1.aes-sha2"}' "http://localhost:8008/_matrix/client/v3/rooms/$ROOM_ID/state/m.room.encryption/" >/dev/null
 
 # Spawn Element-Web instance
-podman run -d --name element-web -p 127.0.0.1:8080:80 --entrypoint sh docker.io/vectorim/element-web -c "sed -i 's/listen  \[::\]:80;//g' /etc/nginx/conf.d/default.conf && /docker-entrypoint.sh && nginx -g 'daemon off;'"
+podman run -d --name element-web -p 127.0.0.1:8080:80 --entrypoint sh docker.io/vectorim/element-web:latest -c "sed -i 's/listen  \[::\]:80;//g' /etc/nginx/conf.d/default.conf && /docker-entrypoint.sh && nginx -g 'daemon off;'"
 podman exec -it element-web sed -i 's|"base_url": "https://matrix-client.matrix.org",|"base_url": "http://localhost:8008",|g' /app/config.json
 podman exec -it element-web sed -i 's|"server_name": "matrix.org"|"server_name": "'$MATRIX_NAME'"|g' /app/config.json
 podman exec -it element-web sed -i 's|"base_url": "https://vector.im"||g' /app/config.json
