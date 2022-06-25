@@ -75,4 +75,5 @@ podman exec -it element-web sed -i 's|"base_url": "https://vector.im"||g' /app/c
 podman exec -it element-web sed -i 's|"default_theme": "light",|"default_theme": "dark",|g' /app/config.json
 podman restart element-web
 
-echo -e "\e[42;30m[+]\e[0;32m http://localhost:8080/#/room/#botroom:$MATRIX_NAME\e[0m"
+echo -e "\e[42;30m[+]\e[0;32m http://localhost:8080/#/room/$ROOM_ID\e[0m"
+echo -e "\e[42;30m[+]\e[0;32m Room ID: $ROOM_ID\e[0m"
